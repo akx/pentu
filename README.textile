@@ -1,0 +1,59 @@
+h2. wat do
+
+Pentu is a tiny little JavaScript library for modern, standards-conforming browsers to make common tasks easier.
+I developed it originally to help build the settings page of [my fork of the pinboard.in Chrome extension](://github.com/akx/pinboard), and thought someone else might have some use for it too, maybe.
+
+h2. A Bit of Etymology
+
+If you're wondering about the name, by the way, it's Finnish for "cub" or "pup". Tiny and cute. According to Wiktionary, in the extinct Arin language, it's also the word for "hotness". That's... nice!
+
+h2. how do
+
+Here's a quick primer -- you may wish to reassign the Pentu function to something more succinct, such as $.
+
+h3. Creating elements
+
+@Pentu("div")@ will return a sparkling new DIV DOM element.
+@Pentu("<div>")@ will do the same... but you're probably already guessing what the implication of the change in syntax is. No?
+@Pentu("<div>Hey, <b>Mom!</b></div>")@ will return a DIV DOM element with some text and an embedded, emboldened "Mom!". In other words, it takes a bit of HTML, has the browser parse it and returns the first DOM element.
+
+h3. Accessing existing elements of the DOM
+
+@Pentu("#foo")@ will return the DOM element with ID foo.
+@Pentu(".foo")@ will return the first DOM element with class foo.
+@Pentu("$li > a")@ will return the first A element that is an immediate child of a LI element. In other words, this wraps *querySelectorAll*, or in even simpler words, does CSS rule based lookup.
+
+To get an Array (a real Array, not a DOM node list) of elements, use Pentu.find() with the same syntax as above. You may also pass a second parameter to limit the lookup to children of that given context.
+
+h3. Manipulating the DOM
+
+The second parameter to the Pentu swiss knife function, undiscussed until now, is an object (think dictionary) in the vein of jQuery's [extended element constructor](http://api.jquery.com/jQuery/#jQuery2),
+but it can also act on existing members of the DOM with the same syntax.
+
+*Note that by default, it will only act on the first element of the selected set. Passing the third parameter, @multi@, will make Pentu act on all selected elements.*
+
+There's a handful of special values Pentu knows for the key of the parameter object:
+
+|html|Sets the inner HTML of the element.|
+|text|Sets the inner text of the element.|
+|css|Expects either a *style* string or an object of valid CSS key-value pairs. See below for an example.|
+|events|Expects an object of {event name: function} pairs. Currently no function to remove an event handler exists, so this is mainly useful for one-shot element creation.|
+
+For any other key, if the element object contains a real JavaScript property of that name (_hasOwnProperty_), it will be assigned.
+Otherwise it will be assigned as an HTML attribute (or if the value is null or undefined, the attribute will be unset).
+
+So all in all,
+
+bc. var warnEl = Pentu("div", {"class": "warning", "text": "You must reach 88 miles/hour first!"});
+Pentu(warnEl, {"css": {"position": "fixed"});
+Pentu(warnEl, {"events": {"click": function() { warnEl.parentNode.removeChild(warnEl); } } });
+  
+(There's no reason those three lines couldn't be done with only one, of course, with the class, text, css and events in one object, but... for the sake of example, man!)
+
+h2. Testing
+
+There's a tiny ad-hoc test suite in test/.
+
+* Chrome 10.0.624.0 (canary): All successful
+* Chrome 8.0.552.23: All successful
+* Firefox 3.6.12: All successful after some gentle coercion

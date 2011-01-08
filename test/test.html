@@ -1,0 +1,106 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+	<script type="text/javascript" src="../src/pentu.js"></script>
+	<script type="text/javascript" src="detest.js"></script>
+	<script type="text/javascript" src="compat.js"></script>
+	<script type="text/javascript">
+
+	t = Detest();
+	
+	(function() {
+		var $ = Pentu;
+		
+		var allElems = (
+			"a abbr acronym address area article aside audio b base bdi bdo big blockquote body br button canvas caption "+
+			"cite code col colgroup command datalist dd del details device dfn div dl dt em embed fieldset figcaption "+
+			"figure footer form h1 h2 h3 h4 h5 h6 head header hgroup hr html i iframe img input ins kbd label legend "+
+			"li link map mark menu meta meter nav noscript object ol optgroup option output p param pre progress q rp rt ruby s "+
+			"samp script section select small source span strong style sub summary sup table tbody td textarea tfoot th thead "+
+			"time title tr track tt ul var video wbr"
+		).split(" ");
+		var expectEmpty = {};
+		"area base br col embed hr img input link meta param source wbr".split(" ").forEach(function(e){expectEmpty[e]=1;});
+		
+		t.test("Element creation", function(e) {
+			allElems.forEach(function(elem){
+				var expect = "<" + elem + ">" + (!expectEmpty[elem] ? "</" + elem + ">" : "");
+				try {
+					e.assertEqual($(elem).outerHTML, expect, elem);
+				} catch(exc) {
+					e.fail("Exception caught at element " + elem + ": " + exc);
+				}
+			});
+		});
+		
+		t.test("Set HTML", function(e) {
+			var el = $("div", {"html": "Hello <b>World</b>"});
+			e.assertEqual(el.outerHTML, "<div>Hello <b>World</b></div>", "Full element HTML equality");
+			e.assertEqual(el.innerText, "Hello World", "Element inner text equality");
+		});
+
+		t.test("Set text", function(e) {
+			var el = $("div", {"text": "Hello <b>World</b>"});
+			e.assertEqual(el.outerHTML, "<div>Hello &lt;b&gt;World&lt;/b&gt;</div>", "Full element HTML equality");
+			e.assertEqual(el.innerText, "Hello <b>World</b>", "Element inner text equality");
+		});
+
+		t.test("Set CSS (string)", function(e) {
+			var el = $("div", {"text": "Hello", "css": "color: blue; background-color: orange"});
+			e.assertEqual(el.style.color, "blue");
+			e.assertEqual(el.style.backgroundColor, "orange");
+		});
+		t.test("Set CSS (object)", function(e) {
+			var el = $("div", {"text": "Hello", "css": {"color": "blue", "background-color": "orange"}});
+			e.assertEqual(el.style.color, "blue");
+			e.assertEqual(el.style.backgroundColor, "orange");
+		});
+		t.test("Set and trigger event", function(e) {
+			var flag = false;
+			var func = function() { flag = true; };
+			var el = $("div", {"events": {"click": func}});
+			var evt = document.createEvent('MouseEvents'); 
+			evt.initMouseEvent('click', true, true, document.defaultView, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+			el.dispatchEvent(evt); 
+			e.assert(flag, "Event fired");
+		});
+		t.test("Find elements by class name", function(e) {
+			e.assertEqual($.find(".x").length, 5);
+		});
+		t.test("Find elements by ID", function(e) {
+			for(var i = 1; i <= 5; i++) {
+				var el = $.find("#x" + i);
+				e.assert(el.tagName == "DIV" && el.className == "x");
+			}
+		});
+		t.test("Find elements by CSS selector", function(e) {
+			e.assertEqual($.find("$#moo>div").length, 5);
+		});
+		t.test("Multi-set attributes", function(e) {
+			var els = $(".x", {"title": "Yeah!"}, true);
+			els.forEach(function(el) {
+				e.assertEqual(el.title, "Yeah!");
+			});
+		});
+	})();
+	
+	function go() {
+		t.run();
+	}
+	
+	</script>
+</head>
+<body onload="go()">
+<h1>Tiny Unit Test Suite</h1>
+
+<div id="moo">
+	<div id="x1" class="x"></div>
+	<div id="x2" class="x"></div>
+	<div id="x3" class="x"></div>
+	<div id="x4" class="x"></div>
+	<div id="x5" class="x"></div>
+</div>
+</body>
+</html>
