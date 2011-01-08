@@ -3,7 +3,7 @@ h2. wat do
 Pentu is a tiny little JavaScript library for modern, standards-conforming browsers to make common tasks easier.
 I developed it originally to help build the settings page of [my fork of the pinboard.in Chrome extension](://github.com/akx/pinboard), and thought someone else might have some use for it too, maybe.
 
-h2. A Bit of Etymology
+h3. A Bit of Etymology
 
 If you're wondering about the name, by the way, it's Finnish for "cub" or "pup". Tiny and cute. According to Wiktionary, in the extinct Arin language, it's also the word for "hotness". That's... nice!
 
@@ -57,3 +57,7 @@ There's a tiny ad-hoc test suite in test/.
 * Chrome 10.0.624.0 (canary): All successful
 * Chrome 8.0.552.23: All successful
 * Firefox 3.6.12: All successful after some gentle coercion
+
+h2. License
+
+Pentu is licensed under the [MIT License](http://opensource.org/licenses/mit-license.php). Go nuts!
