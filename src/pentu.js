@@ -6,7 +6,7 @@
  */
 
 window["Pentu"] = (function(){
-	var fragmentRE = /^\s*<.+>/, slice = [].slice, tableElemRe = /<(tr|td|th|tbody)/i;
+	var fragmentRE = /^\s*<.+>/, slice = [].slice, tableElemRe = /<(tr|td|th|tbody)/i, idRE = /^#/, classRE = /^\./, selRE = /^\$/;
 	function trim(s) {
 		return s.replace(/^\s+/, "").replace(/\s+$/, "")
 	}
@@ -19,8 +19,7 @@ window["Pentu"] = (function(){
 		}
 		return slice.call(container.childNodes);
 	}
-	
-	var idRE = /^#/, classRE = /^\./, selRE = /^\$/;
+
 	function findElements(el, ctx, allowNew) {
 		ctx = ctx || document;
 		if(el.nodeType) { // DOM element
@@ -43,7 +42,7 @@ window["Pentu"] = (function(){
 		}
 		return null;
 	}
-	
+
 	function applyAttribs(el, attribs) {
 		var name, val, key, text;
 		
@@ -68,7 +67,9 @@ window["Pentu"] = (function(){
 				el.style.cssText += text;
 			} else if(name == "events") {
 				for(key in val) {
-					el.addEventListener(key, val[key], null);
+					if(el.addEventListener) {
+						el.addEventListener(key, val[key], false);
+					}
 				}
 			} else {
 				if(el.hasOwnProperty(name)) {

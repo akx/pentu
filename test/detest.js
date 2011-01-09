@@ -7,6 +7,14 @@ var Detest = (function(){
 		tests.push({name: name, func: func});
 	}
 	
+	function trim(s) {
+		return s.replace(/^\s+/, "").replace(/\s+$/, "")
+	}
+	
+	function escapeHTML(str) {
+		return ('' + str).replace(/&/g, '&amp;').replace(/</, '&lt;').replace(/>/, '&gt;');
+	}
+	
 	function makeEnv() {
 		var env = {
 			nOK:		0,
@@ -25,6 +33,22 @@ var Detest = (function(){
 			assertEqual:	function(a, b, msg) {
 				if(a != b)  env.assert(false, (msg || "Equality assertion failed") + ": " + a + " != " + b);
 			},
+			assertEqualNoCase:	function(a, b, msg) {
+				a = trim(('' + a).toLowerCase());
+				b = trim(('' + b).toLowerCase());
+				if(a != b) {
+					env.assert(false, (msg || "Equality (nocase) assertion failed") + ": " + a + " != " + b);
+				}
+			},
+			assertEqualAny:	function(a, bChoices, msg) {
+				var ok = false;
+				var bChoicesStrs = [];
+				for(var i = 0; i < bChoices.length; i++) {
+					if(a == bChoices[i]) return;
+					bChoicesStrs.push("" + bChoices[i]);
+				}
+				env.assert(false, (msg || "Any-equality assertion failed") + ": " + a + " != any of [" + bChoicesStrs.join(", ") + "]");
+			},
 			begin:		function(test) {
 				env.test = test;
 				env.ok = true;
@@ -42,7 +66,7 @@ var Detest = (function(){
 					var errC = Pentu("div", {"html": "<b>" + env.test.name + "</b>: " + env.messages.length + " problems:", "css": "color:red"});
 					var errL = Pentu("ul");
 					env.messages.forEach(function(err) {
-						errL.appendChild(Pentu("li", {html: err}))
+						errL.appendChild(Pentu("li", {text: err}));
 					});
 					errC.appendChild(errL);
 					env.container.appendChild(errC);
@@ -51,7 +75,7 @@ var Detest = (function(){
 				env.test = env.messages = env.ok = null;
 			},
 			finalize:	function() {
-				env.container.appendChild(Pentu("<div><hr />Successes: " + env.nOK + "<br />Failures: " + env.nFail + "</div>", {"css": {color: (env.nFail ? "orange" : "green")}}));
+				env.container.appendChild(Pentu("div", {"html": "<hr />Successes: " + env.nOK + "<br />Failures: " + env.nFail + "</div>", "css": {color: (env.nFail ? "orange" : "green")}}));
 			}
 		};
 		return env;

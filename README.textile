@@ -27,7 +27,7 @@ To get an Array (a real Array, not a DOM node list) of elements, use Pentu.find(
 
 h3. Manipulating the DOM
 
-The second parameter to the Pentu swiss knife function, undiscussed until now, is an object (think dictionary) in the vein of jQuery's "extended element constructor":http://api.jquery.com/jQuery/#jQuery2 ,
+The second parameter to the Pentu swiss knife function, undiscussed until now, is an object (think dictionary) in the vein of jQuery 1.4's "extended element constructor":http://api.jquery.com/jQuery/#jQuery2,
 but it can also act on existing members of the DOM with the same syntax.
 
 *Note that by default, it will only act on the first element of the selected set. Passing the third parameter, @multi@, will make Pentu act on all selected elements.*
@@ -50,14 +50,16 @@ Pentu(warnEl, {"events": {"click": function() { warnEl.parentNode.removeChild(wa
   
 (There's no reason those three lines couldn't be done with only one, of course, with the class, text, css and events in one object, but... for the sake of example, man!)
 
-h2. Testing
+h2. Testing and compatibility
 
 There's a tiny ad-hoc test suite in test/.
 
-* Chrome 10.0.624.0 (canary): All successful
-* Chrome 8.0.552.23: All successful
-* Firefox 3.6.12: All successful after some gentle coercion
+|Chrome 10.0.624.0 (canary)|All successful|
+|Chrome 8.0.552.23|All successful|
+|Firefox 3.6.12|All successful (after some gentle coercion: innerText and outerHTML aren't supported by default, but the test suite adds shims)|
+|Opera 11.00|All successful (though seems Opera always returns hex color values, despite what you assign)|
+|Internet Explorer 8|5 tests work (after some hacks and kludges to the testing harness)|
 
 h2. License
 
-Pentu is licensed under the "MIT License":http://opensource.org/licenses/mit-license.php . Go nuts!
+Pentu is licensed under the "MIT License":http://opensource.org/licenses/mit-license.php. Go nuts!

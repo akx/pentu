@@ -12,6 +12,7 @@
 	
 	(function() {
 		var $ = Pentu;
+		var isIE = /Internet Explorer/.test(navigator.appName);
 		
 		var allElems = (
 			"a abbr acronym address area article aside audio b base bdi bdo big blockquote body br button canvas caption "+
@@ -23,12 +24,15 @@
 		).split(" ");
 		var expectEmpty = {};
 		"area base br col embed hr img input link meta param source wbr".split(" ").forEach(function(e){expectEmpty[e]=1;});
-		
+		if(isIE) expectEmpty.source = false;
 		t.test("Element creation", function(e) {
 			allElems.forEach(function(elem){
 				var expect = "<" + elem + ">" + (!expectEmpty[elem] ? "</" + elem + ">" : "");
+				if(isIE && elem == "button") expect = "<button type=submit></button>"; // Yeah, I don't know either, IE.
 				try {
-					e.assertEqual($(elem).outerHTML, expect, elem);
+					var got = $(elem).outerHTML;
+					if(isIE) got = got.replace(/<\?[^>]+>/, ''); // IE will add its own delightful processing instructions to HTML5 elements, apparently. Strip 'em
+					e.assertEqualNoCase(got, expect, elem);
 				} catch(exc) {
 					e.fail("Exception caught at element " + elem + ": " + exc);
 				}
@@ -37,34 +41,38 @@
 		
 		t.test("Set HTML", function(e) {
 			var el = $("div", {"html": "Hello <b>World</b>"});
-			e.assertEqual(el.outerHTML, "<div>Hello <b>World</b></div>", "Full element HTML equality");
+			e.assertEqualNoCase(el.outerHTML, "<div>Hello <b>World</b></div>", "Full element HTML equality");
 			e.assertEqual(el.innerText, "Hello World", "Element inner text equality");
 		});
 
 		t.test("Set text", function(e) {
 			var el = $("div", {"text": "Hello <b>World</b>"});
-			e.assertEqual(el.outerHTML, "<div>Hello &lt;b&gt;World&lt;/b&gt;</div>", "Full element HTML equality");
+			e.assertEqualNoCase(el.outerHTML, "<div>Hello &lt;b&gt;World&lt;/b&gt;</div>", "Full element HTML equality");
 			e.assertEqual(el.innerText, "Hello <b>World</b>", "Element inner text equality");
 		});
 
 		t.test("Set CSS (string)", function(e) {
 			var el = $("div", {"text": "Hello", "css": "color: blue; background-color: orange"});
-			e.assertEqual(el.style.color, "blue");
-			e.assertEqual(el.style.backgroundColor, "orange");
+			e.assertEqualAny(el.style.color, ["blue", "#0000ff"]);
+			e.assertEqualAny(el.style.backgroundColor, ["orange", "#ffa500"]);
 		});
 		t.test("Set CSS (object)", function(e) {
 			var el = $("div", {"text": "Hello", "css": {"color": "blue", "background-color": "orange"}});
-			e.assertEqual(el.style.color, "blue");
-			e.assertEqual(el.style.backgroundColor, "orange");
+			e.assertEqualAny(el.style.color, ["blue", "#0000ff"]);
+			e.assertEqualAny(el.style.backgroundColor, ["orange", "#ffa500"]);
 		});
 		t.test("Set and trigger event", function(e) {
 			var flag = false;
 			var func = function() { flag = true; };
 			var el = $("div", {"events": {"click": func}});
-			var evt = document.createEvent('MouseEvents'); 
-			evt.initMouseEvent('click', true, true, document.defaultView, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
-			el.dispatchEvent(evt); 
-			e.assert(flag, "Event fired");
+			if(document.createEvent) {
+				var evt = document.createEvent('MouseEvents'); 
+				evt.initMouseEvent('click', true, true, document.defaultView, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+				el.dispatchEvent(evt);
+			} else {
+				el.click();
+			}
+			if(!flag) e.assert(false, "Event was not fired.");
 		});
 		t.test("Find elements by class name", function(e) {
 			e.assertEqual($.find(".x").length, 5);
