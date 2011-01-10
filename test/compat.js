@@ -39,7 +39,7 @@ These aren't strictly needed by Pentu, just the tests.
 
 /**
  * ECMA-262 5th Edition Array.forEach algorithm, for browsers lacking it.
- * This _is_ needed for Pentu, too.
+ * This is used by Pentu in some circumstances.
  * Snatched from https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
  */
 (function(){

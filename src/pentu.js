@@ -6,9 +6,16 @@
  */
 
 window["Pentu"] = (function(){
-	var fragmentRE = /^\s*<.+>/, slice = [].slice, tableElemRe = /<(tr|td|th|tbody)/i, idRE = /^#/, classRE = /^\./, selRE = /^\$/;
+	/** @const */
+	var slice = [].slice, // Stashed copy of the array slice function.
+		fragmentRE = /^\s*<.+>/, // Looks like HTML.
+		tableElemRe = /<t(r|d|h|body)/i, // Required to identify table-looking nodes...
+		idRE = /^#(.+)/, // Identifiers
+		selRE = /^[.$](.+)/, // CSS selectors
+		Sizzle = window["Sizzle"]; // Sizzle, if we have it
+	
 	function trim(s) {
-		return s.replace(/^\s+/, "").replace(/\s+$/, "")
+		return s.replace(/^\s+/, "").replace(/\s+$/, "");
 	}
 	
 	function htmlToFragment(html) {
@@ -21,56 +28,73 @@ window["Pentu"] = (function(){
 	}
 
 	function findElements(el, ctx, allowNew) {
+		var match, res;
 		ctx = ctx || document;
 		if(el.nodeType) { // DOM element
 			return el;
 		}
-		if(idRE.test(el)) { // ID selector ("#foo")
-			return ctx.getElementById(el.substring(1));
+		if((match = idRE.exec(el))) { // ID selector ("#foo")
+			return ctx.getElementById(match[1]);
 		}
-		if(classRE.test(el)) { // class selector (".foo")
-			return slice.call(ctx.getElementsByClassName(el.substring(1)));
-		}
-		if(selRE.test(el)) { // CSS selector ("$foo>bar>quux")
-			return slice.call(ctx.querySelectorAll(el.substring(1)));
+		if(selRE.test(el)) { // class selector (".foo") or CSS selector ("$foo>bar>quux")
+			el = el.replace(/^\$/,'');
+			try {
+				return slice.call(res = ctx.querySelectorAll(el));
+			}
+			catch(e) {
+				// We _may_ break our promise of real Arrays if we're running on IE (which doesn't like to [].slice whatever querySelectorAll on it returns).
+				// However, we'll first try to use Sizzle, if it's around, before really giving up.
+				return Sizzle ? Sizzle(el, ctx) : res;
+			}
 		}
 		if(allowNew) {
 			if(fragmentRE.test(el)) { // HTML fragment ("<div>derp</div>")
 				return htmlToFragment(el);
+			} else {
+				return document.createElement(el); // Element name ("div")
 			}
-			return document.createElement(el); // Element name ("div")
 		}
 		return null;
 	}
+	
+	var setters = {
+		"html":		function(el, val) {
+			el.innerHTML = (val.nodeType ? val.innerHTML : val);
+		},
+		"text":		function(el, val) {
+			var c;
+			while ((c = el.firstChild)) {
+				el.removeChild(c);
+			}
+			el.appendChild((el.ownerDocument || document).createTextNode(val.nodeType ? val.innerText : val));
+		},
+		"css":		function(el, val) {
+			var key, text = "";
+			if(val.substring) { // Quacks like a string
+				text = ";" + val;
+			} else {
+				for(key in val) {
+					text += ";" + key + ":" + val[key];
+				}
+			}
+			el.style.cssText += text;
+		},
+		"events":	function(el, val) {
+			var key;
+			if(!el.addEventListener) return;
+			for(key in val) {
+				el.addEventListener(key, val[key], false);
+			}
+		}
+	};
 
 	function applyAttribs(el, attribs) {
-		var name, val, key, text;
-		
+		var val, setter, name;
 		for(name in attribs) {
 			val = attribs[name];
-			if(name === "html") {
-				el.innerHTML = (val.nodeType ? val.innerHTML : val);
-			} else if(name === "text") {
-				while ( el.firstChild ) {
-					el.removeChild( el.firstChild );
-				}
-				el.appendChild((el.ownerDocument || document).createTextNode(val.nodeType ? val.innerText : val));
-			} else if(name === "css") {
-				text = "";
-				if(val.substring) { // Quacks like a string
-					text = ";" + val;
-				} else {
-					for(key in val) {
-						text += ";" + key + ":" + val[key];
-					}
-				}
-				el.style.cssText += text;
-			} else if(name == "events") {
-				for(key in val) {
-					if(el.addEventListener) {
-						el.addEventListener(key, val[key], false);
-					}
-				}
+			if((setter = setters[name])) {
+				setter(el, val, name);
+				continue;
 			} else {
 				if(el.hasOwnProperty(name)) {
 					el[name] = val;
@@ -83,13 +107,12 @@ window["Pentu"] = (function(){
 	}
 	
 	function swissKnife(el, attribs, multi) {
-		el = findElements(el, document, true);
+		el = findElements(el, document, 1);
 		el = ((!multi && el[0]) ? el[0] : el);
 		if(attribs) {
-			if(el.forEach) {
-				el.forEach(function(el){
-					applyAttribs(el, attribs);
-				});
+			if(el.length) {
+				var i = el.length;
+				if(i>0) while(i) applyAttribs(el[--i], attribs);
 			}
 			else {
 				applyAttribs(el, attribs);
@@ -100,5 +123,6 @@ window["Pentu"] = (function(){
 	
 	swissKnife["find"] = findElements;
 	swissKnife["parse"] = htmlToFragment;
+	swissKnife["setters"] = setters;
 	return swissKnife;
 }());

@@ -17,6 +17,7 @@ var Detest = (function(){
 	
 	function makeEnv() {
 		var env = {
+			nRun:		0,
 			nOK:		0,
 			nFail:		0,
 			test:		null,
@@ -53,6 +54,7 @@ var Detest = (function(){
 				env.test = test;
 				env.ok = true;
 				env.messages = [];
+				env.nRun ++;
 			},
 			fail:		function(msg) {
 				env.ok = false;
@@ -75,13 +77,19 @@ var Detest = (function(){
 				env.test = env.messages = env.ok = null;
 			},
 			finalize:	function() {
-				env.container.appendChild(Pentu("div", {"html": "<hr />Successes: " + env.nOK + "<br />Failures: " + env.nFail + "</div>", "css": {color: (env.nFail ? "orange" : "green")}}));
+				env.container.appendChild(Pentu("div", {
+					"html":
+						"<hr />Tests run: " + env.nRun +
+						"<br />Successes: " + env.nOK +
+						"<br />Failures: " + env.nFail,
+					"css": {color: (env.nFail ? "orange" : "green")}
+				}));
 			}
 		};
 		return env;
 	}
 	
-	function run() {
+	function run(catchExceptions) {
 		var i = 0;
 		var env = makeEnv();
 		var timer = setInterval(function() {
@@ -92,10 +100,14 @@ var Detest = (function(){
 				return;
 			}
 			env.begin(test);
-			try {
+			if(catchExceptions) {
+				try {
+					test.func(env);
+				} catch(e) {
+					env.fail("Exception caught: " + e);
+				}
+			} else {
 				test.func(env);
-			} catch(e) {
-				env.fail("Exception caught: " + e);
 			}
 			env.finish();
 		}, 50);

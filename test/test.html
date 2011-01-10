@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
 	<meta charset="UTF-8">
-	<title></title>
+	<title>Pentu Unit Test Suite</title>
 	<script type="text/javascript" src="../src/pentu.js"></script>
 	<script type="text/javascript" src="detest.js"></script>
 	<script type="text/javascript" src="compat.js"></script>
@@ -92,16 +92,24 @@
 				e.assertEqual(el.title, "Yeah!");
 			});
 		});
+		
+		t.test("Pluggable setters", function(e) {
+			$.setters["ghostliness"] = function(element, value) {
+				element.style.opacity = 1.0 - value;
+			};
+			var el = $("#x3", {"ghostliness": .3});
+			e.assertEqual(el.style.opacity, 0.7);
+		});
 	})();
 	
 	function go() {
-		t.run();
+		t.run(true);
 	}
 	
 	</script>
 </head>
 <body onload="go()">
-<h1>Tiny Unit Test Suite</h1>
+<h1>Pentu Unit Test Suite</h1>
 
 <div id="moo">
 	<div id="x1" class="x"></div>
